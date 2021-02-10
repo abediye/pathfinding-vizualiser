@@ -1,6 +1,7 @@
 
-export default () => 
-    <div className="App">
+const App = () => 
+<div className="App">
       Pathfinding vizualiser
     </div>
 
+export default App
