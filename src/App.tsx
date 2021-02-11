@@ -1,12 +1,13 @@
-import Board from './components/Board'
-import Header from './components/Header'
-import StyledApp from './styles/StyledApp'
+import Board from "./components/Board";
+import Header from "./components/Header";
+import GlobalStyle from "./styles/GlobalStyle";
 
+const App = () => (
+    <>
+        <Header />
+        <Board />
+        <GlobalStyle />
+    </>
+);
 
-const App = () =>
-  <StyledApp className="App">
-    <Header />
-    <Board />
-  </StyledApp>
-
-export default App
+export default App;

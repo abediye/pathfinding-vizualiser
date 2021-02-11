@@ -1,7 +1,5 @@
+import { StyledBoard } from "../styles/StyledBoard";
 
+const Board = () => <StyledBoard>this is the board</StyledBoard>;
 
-const Board = () => <div>
-this is the board
-</div>
-
-export default Board
+export default Board;
