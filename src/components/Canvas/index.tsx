@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-
 interface Node {
     position: Coordinates;
     isStartNode: boolean;
     isEndNode: boolean;
     isActive: boolean;
     label: string;
+    connectedNode: Array<Node>;
 }
 
 interface Coordinates {
@@ -24,6 +24,7 @@ const NodeCanvas = () => {
 
     const [nodes, setNodes] = useState<Array<Node>>([]);
     const [isMovingNode, setIsMovingNode] = useState(false);
+    const [activeNode, setActiveNode] = useState<Node | null>(null);
 
     useEffect(() => {
         if (!canvasRef.current) return;
@@ -62,7 +63,24 @@ const NodeCanvas = () => {
     const drawNode = (node: Node) => {
         if (!contextRef.current) return;
 
-        contextRef.current.strokeStyle = node.isActive ? "red" : "black";
+        node.connectedNode.map((connectedNode) => {
+            if (!contextRef.current) return;
+            contextRef.current.beginPath();
+            contextRef.current.strokeStyle = "black";
+            contextRef.current.moveTo(node.position.x, node.position.y);
+            contextRef.current.lineTo(
+                connectedNode.position.x,
+                connectedNode.position.y
+            );
+            contextRef.current.stroke();
+            contextRef.current.closePath();
+        });
+
+        contextRef.current.strokeStyle = node.isActive
+            ? "red"
+            : node.isStartNode
+            ? "green"
+            : "black";
         contextRef.current.lineWidth = 5;
         contextRef.current.beginPath();
         contextRef.current.arc(
@@ -73,14 +91,18 @@ const NodeCanvas = () => {
             2 * Math.PI
         );
         contextRef.current.stroke();
+
+        contextRef.current.fillStyle = "white";
+        contextRef.current.fill();
+        contextRef.current.closePath();
+
         contextRef.current.font = "32px roboto";
         contextRef.current.fillText(
-            node.label,
+            node.isStartNode ? "start".toUpperCase() : node.label,
             node.position.x - 50,
             node.position.y + 10,
             NODE_RADIUS
         );
-        contextRef.current.closePath();
     };
 
     const handleMouseDown = ({
@@ -89,20 +111,21 @@ const NodeCanvas = () => {
         const { offsetX, offsetY } = nativeEvent;
         let node = getExsistingNode({ x: offsetX * 2, y: offsetY * 2 });
         if (!node) {
-            console.log("new Node");
             node = createNewNode(offsetX, offsetY);
         }
+        setActiveNode(node);
         node.isActive = true;
-
         setIsMovingNode(true);
     };
+
     const createNewNode = (offsetX: number, offsetY: number) => {
         const newNode = {
             position: { x: offsetX * 2, y: offsetY * 2 },
-            isStartNode: false,
+            isStartNode: nodes.length === 0,
             isActive: false,
             isEndNode: false,
             label: `Node ${nodes.length + 1}`,
+            connectedNode: activeNode ? [activeNode] : [],
         };
         setNodes([...nodes, newNode]);
         return newNode;
@@ -128,7 +151,6 @@ const NodeCanvas = () => {
         const activeNode = nodes.find((node) => node.isActive);
         if (!activeNode) return;
         activeNode.position = { x: offsetX * 2, y: offsetY * 2 };
-        console.log("mouse move: " + nodes.length);
         drawNodes();
     };
 
