@@ -1,10 +1,16 @@
+import { notDeepEqual } from "assert";
 import React, { useEffect, useRef, useState } from "react";
 
 interface Node {
-    position: { x: number; y: number };
+    position: Coordinates;
     isStartNode: boolean;
     isEndNode: boolean;
     isActive: boolean;
+}
+
+interface Coordinates {
+    x: number;
+    y: number;
 }
 
 const Board = () => {
@@ -42,17 +48,6 @@ const Board = () => {
         console.log("init: " + JSON.stringify(nodes, null, 2));
     }, []);
 
-    const drawNode = (x: number, y: number) => {
-        if (!contextRef.current) return;
-
-        contextRef.current.strokeStyle = "black";
-        contextRef.current.lineWidth = 5;
-        contextRef.current.beginPath();
-        contextRef.current.arc(x, y, 50, 0, 2 * Math.PI);
-        contextRef.current.stroke();
-        contextRef.current.closePath();
-    };
-
     const drawNodes = () => {
         if (!contextRef.current || !canvasRef.current) return;
 
@@ -71,19 +66,51 @@ const Board = () => {
             });
     };
 
+    const drawNode = (x: number, y: number) => {
+        if (!contextRef.current) return;
+
+        contextRef.current.strokeStyle = "black";
+        contextRef.current.lineWidth = 5;
+        contextRef.current.beginPath();
+        contextRef.current.arc(x, y, 50, 0, 2 * Math.PI);
+        contextRef.current.stroke();
+        contextRef.current.closePath();
+    };
+
     const handleMouseDown = ({
         nativeEvent,
     }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
         const { offsetX, offsetY } = nativeEvent;
+        let node = getExsistingNode({ x: offsetX * 2, y: offsetY * 2 });
+        if (!node) {
+            console.log("new Node");
+            node = createNewNode(offsetX, offsetY);
+        }
+        node.isActive = true;
 
+        setIsMovingNode(true);
+    };
+    const createNewNode = (offsetX: number, offsetY: number) => {
         const newNode = {
             position: { x: offsetX * 2, y: offsetY * 2 },
             isStartNode: false,
-            isActive: true,
+            isActive: false,
             isEndNode: false,
         };
         setNodes([...nodes, newNode]);
-        setIsMovingNode(true);
+        return newNode;
+    };
+
+    const getExsistingNode = (point: Coordinates): Node | undefined => {
+        const existingNode = nodes.find(
+            (node) =>
+                Math.sqrt(
+                    Math.pow(point.x - node.position.x, 2) +
+                        Math.pow(point.y - node.position.y, 2)
+                ) < 100
+        );
+
+        return existingNode;
     };
 
     const handleMouseMove = ({
