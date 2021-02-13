@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 interface Node {
     position: { x: number; y: number };
-    isStart: boolean;
-    isEnd: boolean;
+    isStartNode: boolean;
+    isEndNode: boolean;
+    isActive: boolean;
 }
 
 const Board = () => {
@@ -13,7 +14,14 @@ const Board = () => {
         null
     );
 
-    const [nodes, setNodes] = useState<Array<Node>>([]);
+    const [nodes, setNodes] = useState<Array<Node>>([
+        {
+            position: { x: 50, y: 50 },
+            isStartNode: false,
+            isEndNode: false,
+            isActive: false,
+        },
+    ]);
     const [isMovingNode, setIsMovingNode] = useState(false);
 
     useEffect(() => {
@@ -27,47 +35,14 @@ const Board = () => {
         canvas.style.height = `${window.innerHeight}px`;
 
         const context = canvas.getContext("2d");
+
         if (!context) return;
         contextRef.current = context;
+        drawNodes();
+        console.log("init: " + JSON.stringify(nodes, null, 2));
     }, []);
 
-    const placeNode = ({
-        nativeEvent,
-    }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-        const { offsetX, offsetY } = nativeEvent;
-
-        drawPlacedNode(offsetX * 2, offsetY * 2);
-
-        console.log("placing node: ");
-    };
-
-    const moveNode = ({
-        nativeEvent,
-    }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-        if (!isMovingNode) return;
-
-        const { offsetX, offsetY } = nativeEvent;
-
-        console.log("moving node: ");
-
-        // drawMovingNode();
-    };
-
-    const setNode = ({
-        nativeEvent,
-    }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
-        const { offsetX, offsetY } = nativeEvent;
-        const newNode: Node = {
-            position: { x: offsetX, y: offsetY },
-            isStart: false,
-            isEnd: false,
-        };
-        setNodes([...nodes, newNode]);
-        setIsMovingNode(false);
-        console.log("setting node: "); //+ nodes.length);
-    };
-
-    const drawPlacedNode = (x: number, y: number) => {
+    const drawNode = (x: number, y: number) => {
         if (!contextRef.current) return;
 
         contextRef.current.strokeStyle = "black";
@@ -78,30 +53,64 @@ const Board = () => {
         contextRef.current.closePath();
     };
 
-    // const drawNodes = () => {
-    //     nodes.forEach((node) => {
-    //         if (!contextRef.current) return;
-    //         contextRef.current.strokeStyle = "black";
-    //         contextRef.current.lineWidth = 5;
-    //         contextRef.current.beginPath();
-    //         contextRef.current.arc(
-    //             node.position.x * 2,
-    //             node.position.y * 2,
-    //             50,
-    //             0,
-    //             2 * Math.PI
-    //         );
-    //         contextRef.current.stroke();
-    //         contextRef.current.closePath();
-    //     });
-    //     console.log("after drawing - nodes: " + nodes.length);
-    // };
+    const drawNodes = () => {
+        if (!contextRef.current || !canvasRef.current) return;
+
+        contextRef.current.clearRect(
+            0,
+            0,
+            canvasRef.current.width,
+            canvasRef.current.height
+        );
+
+        console.log("draw nodes: " + nodes.length);
+        nodes
+            .map((node) => node.position)
+            .forEach((position) => {
+                drawNode(position.x, position.y);
+            });
+    };
+
+    const handleMouseDown = ({
+        nativeEvent,
+    }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+        const { offsetX, offsetY } = nativeEvent;
+
+        const newNode = {
+            position: { x: offsetX * 2, y: offsetY * 2 },
+            isStartNode: false,
+            isActive: true,
+            isEndNode: false,
+        };
+        setNodes([...nodes, newNode]);
+        setIsMovingNode(true);
+    };
+
+    const handleMouseMove = ({
+        nativeEvent,
+    }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+        if (!isMovingNode) return;
+        const { offsetX, offsetY } = nativeEvent;
+        const activeNode = nodes.find((node) => node.isActive);
+        if (!activeNode) return;
+        activeNode.position = { x: offsetX * 2, y: offsetY * 2 };
+        console.log("mouse move: " + nodes.length);
+        drawNodes();
+    };
+    const handleMouseUp = () => {
+        console.log("mouse up: " + nodes.length);
+        drawNodes();
+        setIsMovingNode(false);
+        const activeNode = nodes.find((node) => node.isActive);
+        if (!activeNode) return;
+        activeNode.isActive = false;
+    };
 
     return (
         <canvas
-            onMouseDown={placeNode}
-            onMouseUp={setNode}
-            onMouseMove={moveNode}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
             ref={canvasRef}
         />
     );
