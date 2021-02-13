@@ -1,4 +1,4 @@
-import Board from "./components/Board";
+import NodeCanvas from "./components/Canvas";
 import Header from "./components/Header";
 
 import { StyledApp } from "./styles/StyledApp";
@@ -6,7 +6,7 @@ import { StyledApp } from "./styles/StyledApp";
 const App = () => (
     <StyledApp>
         <Header />
-        <Board />
+        <NodeCanvas />
     </StyledApp>
 );
 

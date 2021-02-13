@@ -1,4 +1,3 @@
-import { notDeepEqual } from "assert";
 import React, { useEffect, useRef, useState } from "react";
 
 interface Node {
@@ -6,6 +5,7 @@ interface Node {
     isStartNode: boolean;
     isEndNode: boolean;
     isActive: boolean;
+    label: string;
 }
 
 interface Coordinates {
@@ -13,21 +13,16 @@ interface Coordinates {
     y: number;
 }
 
-const Board = () => {
+const NODE_RADIUS = 100;
+
+const NodeCanvas = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     const contextRef = useRef<CanvasRenderingContext2D | null | undefined>(
         null
     );
 
-    const [nodes, setNodes] = useState<Array<Node>>([
-        {
-            position: { x: 50, y: 50 },
-            isStartNode: false,
-            isEndNode: false,
-            isActive: false,
-        },
-    ]);
+    const [nodes, setNodes] = useState<Array<Node>>([]);
     const [isMovingNode, setIsMovingNode] = useState(false);
 
     useEffect(() => {
@@ -59,21 +54,32 @@ const Board = () => {
         );
 
         console.log("draw nodes: " + nodes.length);
-        nodes
-            .map((node) => node.position)
-            .forEach((position) => {
-                drawNode(position.x, position.y);
-            });
+        nodes.map((node) => {
+            drawNode(node);
+        });
     };
 
-    const drawNode = (x: number, y: number) => {
+    const drawNode = (node: Node) => {
         if (!contextRef.current) return;
 
-        contextRef.current.strokeStyle = "black";
+        contextRef.current.strokeStyle = node.isActive ? "red" : "black";
         contextRef.current.lineWidth = 5;
         contextRef.current.beginPath();
-        contextRef.current.arc(x, y, 50, 0, 2 * Math.PI);
+        contextRef.current.arc(
+            node.position.x,
+            node.position.y,
+            NODE_RADIUS,
+            0,
+            2 * Math.PI
+        );
         contextRef.current.stroke();
+        contextRef.current.font = "32px roboto";
+        contextRef.current.fillText(
+            node.label,
+            node.position.x - 50,
+            node.position.y + 10,
+            NODE_RADIUS
+        );
         contextRef.current.closePath();
     };
 
@@ -96,6 +102,7 @@ const Board = () => {
             isStartNode: false,
             isActive: false,
             isEndNode: false,
+            label: `Node ${nodes.length + 1}`,
         };
         setNodes([...nodes, newNode]);
         return newNode;
@@ -107,7 +114,7 @@ const Board = () => {
                 Math.sqrt(
                     Math.pow(point.x - node.position.x, 2) +
                         Math.pow(point.y - node.position.y, 2)
-                ) < 100
+                ) < NODE_RADIUS
         );
 
         return existingNode;
@@ -124,6 +131,7 @@ const Board = () => {
         console.log("mouse move: " + nodes.length);
         drawNodes();
     };
+
     const handleMouseUp = () => {
         console.log("mouse up: " + nodes.length);
         drawNodes();
@@ -143,4 +151,4 @@ const Board = () => {
     );
 };
 
-export default Board;
+export default NodeCanvas;
