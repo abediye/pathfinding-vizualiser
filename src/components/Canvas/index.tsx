@@ -65,12 +65,54 @@ const NodeCanvas = () => {
 
         node.connectedNode.map((connectedNode) => {
             if (!contextRef.current) return;
+            const node_pointOnRadius = getPointOnRadius(
+                node.position,
+                connectedNode.position
+            );
+            const connectedNode_pointOnRadius = getPointOnRadius(
+                connectedNode.position,
+                node.position
+            );
+
+            contextRef.current.beginPath();
+            contextRef.current.arc(
+                node_pointOnRadius.x,
+                node_pointOnRadius.y,
+                10,
+                0,
+                2 * Math.PI,
+                true
+            );
+            contextRef.current.fillStyle = "purple";
+            // contextRef.current.stroke();
+            contextRef.current.fill();
+            contextRef.current.closePath();
+
+            contextRef.current.beginPath();
+            contextRef.current.arc(
+                connectedNode_pointOnRadius.x,
+                connectedNode_pointOnRadius.y,
+                10,
+                0,
+                2 * Math.PI,
+                true
+            );
+            contextRef.current.fillStyle = "ornage";
+            // contextRef.current.stroke();
+            contextRef.current.fill();
+            contextRef.current.closePath();
+
             contextRef.current.beginPath();
             contextRef.current.strokeStyle = "black";
-            contextRef.current.moveTo(node.position.x, node.position.y);
+
+            contextRef.current.moveTo(
+                node_pointOnRadius.x,
+                node_pointOnRadius.y
+            );
+
             contextRef.current.lineTo(
-                connectedNode.position.x,
-                connectedNode.position.y
+                connectedNode_pointOnRadius.x,
+                connectedNode_pointOnRadius.y
             );
             contextRef.current.stroke();
             contextRef.current.closePath();
@@ -103,6 +145,18 @@ const NodeCanvas = () => {
             node.position.y + 10,
             NODE_RADIUS
         );
+    };
+
+    const getPointOnRadius = (
+        center: Coordinates,
+        point: Coordinates
+    ): Coordinates => {
+        const angle = Math.atan((point.y - center.y) / (point.x - center.x));
+
+        return {
+            x: center.x + Math.cos(angle) * NODE_RADIUS,
+            y: center.y + Math.sin(angle) * NODE_RADIUS,
+        };
     };
 
     const handleMouseDown = ({
