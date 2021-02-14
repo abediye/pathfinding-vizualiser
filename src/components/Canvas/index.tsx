@@ -1,17 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-interface Node {
-    position: Coordinates;
-    isStartNode: boolean;
-    isEndNode: boolean;
-    isActive: boolean;
-    label: string;
-    connectedNode: Array<Node>;
-}
-
-interface Coordinates {
-    x: number;
-    y: number;
-}
+import React, { useContext, useEffect, useRef, useState } from "react";
+import NodesContext from "../../contexts/NodesContext";
+import { Node, Coordinates } from "../../interfaces";
+import { draw } from "./draw";
 
 const NODE_RADIUS = 100;
 
@@ -26,138 +16,12 @@ const NodeCanvas = () => {
     const [isMovingNode, setIsMovingNode] = useState(false);
     const [activeNode, setActiveNode] = useState<Node | null>(null);
 
+    const nodesContext = useContext(NodesContext);
+
     useEffect(() => {
-        if (!canvasRef.current) return;
-        const canvas = canvasRef.current;
-
-        canvas.width = window.innerWidth * 2;
-        canvas.height = window.innerHeight * 2;
-
-        canvas.style.width = `${window.innerWidth}px`;
-        canvas.style.height = `${window.innerHeight}px`;
-
-        const context = canvas.getContext("2d");
-
-        if (!context) return;
-        contextRef.current = context;
-        drawNodes();
-        console.log("init: " + JSON.stringify(nodes, null, 2));
+        draw.setCanvas(canvasRef);
+        draw.nodes(nodes);
     }, []);
-
-    const drawNodes = () => {
-        if (!contextRef.current || !canvasRef.current) return;
-
-        contextRef.current.clearRect(
-            0,
-            0,
-            canvasRef.current.width,
-            canvasRef.current.height
-        );
-
-        console.log("draw nodes: " + nodes.length);
-        nodes.map((node) => {
-            drawNode(node);
-        });
-    };
-
-    const drawNode = (node: Node) => {
-        if (!contextRef.current) return;
-
-        node.connectedNode.map((connectedNode) => {
-            if (!contextRef.current) return;
-            const node_pointOnRadius = getPointOnRadius(
-                node.position,
-                connectedNode.position
-            );
-            const connectedNode_pointOnRadius = getPointOnRadius(
-                connectedNode.position,
-                node.position
-            );
-
-            contextRef.current.beginPath();
-            contextRef.current.arc(
-                node_pointOnRadius.x,
-                node_pointOnRadius.y,
-                10,
-                0,
-                2 * Math.PI,
-                true
-            );
-            contextRef.current.fillStyle = "purple";
-            // contextRef.current.stroke();
-            contextRef.current.fill();
-            contextRef.current.closePath();
-
-            contextRef.current.beginPath();
-            contextRef.current.arc(
-                connectedNode_pointOnRadius.x,
-                connectedNode_pointOnRadius.y,
-                10,
-                0,
-                2 * Math.PI,
-                true
-            );
-            contextRef.current.fillStyle = "ornage";
-            // contextRef.current.stroke();
-            contextRef.current.fill();
-            contextRef.current.closePath();
-
-            contextRef.current.beginPath();
-            contextRef.current.strokeStyle = "black";
-
-            contextRef.current.moveTo(
-                node_pointOnRadius.x,
-                node_pointOnRadius.y
-            );
-
-            contextRef.current.lineTo(
-                connectedNode_pointOnRadius.x,
-                connectedNode_pointOnRadius.y
-            );
-            contextRef.current.stroke();
-            contextRef.current.closePath();
-        });
-
-        contextRef.current.strokeStyle = node.isActive
-            ? "red"
-            : node.isStartNode
-            ? "green"
-            : "black";
-        contextRef.current.lineWidth = 5;
-        contextRef.current.beginPath();
-        contextRef.current.arc(
-            node.position.x,
-            node.position.y,
-            NODE_RADIUS,
-            0,
-            2 * Math.PI
-        );
-        contextRef.current.stroke();
-
-        contextRef.current.fillStyle = "white";
-        contextRef.current.fill();
-        contextRef.current.closePath();
-
-        contextRef.current.font = "32px roboto";
-        contextRef.current.fillText(
-            node.isStartNode ? "start".toUpperCase() : node.label,
-            node.position.x - 50,
-            node.position.y + 10,
-            NODE_RADIUS
-        );
-    };
-
-    const getPointOnRadius = (
-        center: Coordinates,
-        point: Coordinates
-    ): Coordinates => {
-        const angle = Math.atan((point.y - center.y) / (point.x - center.x));
-
-        return {
-            x: center.x + Math.cos(angle) * NODE_RADIUS,
-            y: center.y + Math.sin(angle) * NODE_RADIUS,
-        };
-    };
 
     const handleMouseDown = ({
         nativeEvent,
@@ -205,12 +69,12 @@ const NodeCanvas = () => {
         const activeNode = nodes.find((node) => node.isActive);
         if (!activeNode) return;
         activeNode.position = { x: offsetX * 2, y: offsetY * 2 };
-        drawNodes();
+        draw.nodes(nodes);
     };
 
     const handleMouseUp = () => {
         console.log("mouse up: " + nodes.length);
-        drawNodes();
+        draw.nodes(nodes);
         setIsMovingNode(false);
         const activeNode = nodes.find((node) => node.isActive);
         if (!activeNode) return;
