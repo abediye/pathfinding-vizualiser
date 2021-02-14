@@ -22,7 +22,6 @@ export const draw = {
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
-        console.log("draw nodes: " + nodes.length);
         nodes.map((node) => {
             drawConnectingLines(node);
         });
@@ -54,12 +53,13 @@ const getPointOnRadius = (
 };
 
 const drawConnectingLines = (node: Node) => {
-    node.connectedNode.map((connectedNode) => {
-        if (!context) return;
+    node.connectedNodes.map((connectedNode) => {
+        if (!context || !connectedNode) return;
         const node_pointOnRadius = getPointOnRadius(
             node.position,
             connectedNode.position
         );
+
         const connectedNode_pointOnRadius = getPointOnRadius(
             connectedNode.position,
             node.position
@@ -80,8 +80,8 @@ const drawConnectingLines = (node: Node) => {
 };
 
 const drawDotOnRadius = (node: Node) => {
-    node.connectedNode.map((connectedNode) => {
-        if (!context) return;
+    node.connectedNodes.map((connectedNode) => {
+        if (!context || !connectedNode) return;
         const node_pointOnRadius = getPointOnRadius(
             node.position,
             connectedNode.position
@@ -120,6 +120,10 @@ const drawPointLabel = (point: Coordinates) => {
 
 const drawNode = (node: Node) => {
     if (!context) return;
+
+    console.log("drawing")
+    console.log(node.label)
+    console.log(node.isActive)
 
     context.strokeStyle = node.isActive
         ? "red"

@@ -4,7 +4,7 @@ export interface Node {
     isEndNode: boolean;
     isActive: boolean;
     label: string;
-    connectedNode: Array<Node>;
+    connectedNodes: Array<Node | null | undefined>;
 }
 
 export interface Coordinates {

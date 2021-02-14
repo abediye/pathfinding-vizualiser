@@ -14,7 +14,7 @@ const NodeCanvas = () => {
 
     const [nodes, setNodes] = useState<Array<Node>>([]);
     const [isMovingNode, setIsMovingNode] = useState(false);
-    const [activeNode, setActiveNode] = useState<Node | null>(null);
+    const [activeNodes, setActiveNodes] = useState<Array<Node | null>>([]);
 
     const nodesContext = useContext(NodesContext);
 
@@ -27,27 +27,57 @@ const NodeCanvas = () => {
         nativeEvent,
     }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
         const { offsetX, offsetY } = nativeEvent;
+
+        if (!nativeEvent.ctrlKey) {
+            nodes
+                .filter((node) => node.isActive)
+                .map((node) => (node!.isActive = false));
+            setActiveNodes([]);
+            return;
+        }
+
         let node = getExsistingNode({ x: offsetX * 2, y: offsetY * 2 });
+
         if (!node) {
             node = createNewNode(offsetX, offsetY);
         }
-        setActiveNode(node);
-        node.isActive = true;
+        setActiveNodes(getActiveNodes(nativeEvent.shiftKey, node));
+
         setIsMovingNode(true);
+        draw.nodes(nodes)
     };
 
-    const createNewNode = (offsetX: number, offsetY: number) => {
-        const newNode = {
+    const getActiveNodes = (
+        shiftKeyPressed: boolean,
+        node: Node
+    ): Array<Node | null> => {
+        node.isActive = true;
+        if (!shiftKeyPressed) {
+            activeNodes.map((node) => (node!.isActive = false));
+            return [node];
+        }
+
+        if (activeNodes.includes(node)) {
+            return [...activeNodes];
+        }
+
+        return [...activeNodes, node];
+    };
+
+    const createNewNode = (offsetX: number, offsetY: number): Node => {
+        const newNode: Node = {
             position: { x: offsetX * 2, y: offsetY * 2 },
             isStartNode: nodes.length === 0,
             isActive: false,
             isEndNode: false,
             label: `Node ${nodes.length + 1}`,
-            connectedNode: activeNode ? [activeNode] : [],
+            connectedNodes: [...activeNodes],
         };
         setNodes([...nodes, newNode]);
         return newNode;
     };
+
+    const removeNode = () => {};
 
     const getExsistingNode = (point: Coordinates): Node | undefined => {
         const existingNode = nodes.find(
@@ -66,19 +96,25 @@ const NodeCanvas = () => {
     }: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
         if (!isMovingNode) return;
         const { offsetX, offsetY } = nativeEvent;
-        const activeNode = nodes.find((node) => node.isActive);
-        if (!activeNode) return;
-        activeNode.position = { x: offsetX * 2, y: offsetY * 2 };
+        if (!activeNodes) return;
+        activeNodes.map((node) => {
+            if (!node) return;
+            node.position.x = offsetX * 2;
+            node.position.y = offsetY * 2;
+        });
+
+        // position = { x: offsetX * 2, y: offsetY * 2 };
         draw.nodes(nodes);
+        console.log("activeNodes move");
+        console.log(activeNodes.map((node) => node?.label));
     };
 
     const handleMouseUp = () => {
-        console.log("mouse up: " + nodes.length);
         draw.nodes(nodes);
         setIsMovingNode(false);
-        const activeNode = nodes.find((node) => node.isActive);
-        if (!activeNode) return;
-        activeNode.isActive = false;
+
+        console.log("activeNodes up");
+        console.log(activeNodes.map((node) => node?.label));
     };
 
     return (
