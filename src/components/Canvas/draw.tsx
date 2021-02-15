@@ -1,5 +1,5 @@
-import { RefObject, useContext, useRef } from "react";
-import { Node, Coordinates } from "../../interfaces";
+import { RefObject } from "react";
+import { Coordinates, Node } from "../../interfaces";
 
 let canvas: HTMLCanvasElement | null = null;
 let context: CanvasRenderingContext2D | null = null;
@@ -22,15 +22,9 @@ export const draw = {
 
         context.clearRect(0, 0, canvas.width, canvas.height);
 
-        nodes.map((node) => {
-            drawConnectingLines(node);
-        });
-        nodes.map((node) => {
-            drawNode(node);
-        });
-        nodes.map((node) => {
-            drawDotOnRadius(node);
-        });
+        nodes.map((node) => drawConnectingLines(node));
+        nodes.map((node) => drawNode(node));
+        nodes.map((node) => drawDotOnRadius(node));
     },
 };
 
@@ -54,7 +48,7 @@ const getPointOnRadius = (
 
 const drawConnectingLines = (node: Node) => {
     node.connectedNodes.map((connectedNode) => {
-        if (!context || !connectedNode) return;
+        if (!context || !connectedNode) return null;
         const node_pointOnRadius = getPointOnRadius(
             node.position,
             connectedNode.position
@@ -76,12 +70,14 @@ const drawConnectingLines = (node: Node) => {
         );
         context.stroke();
         context.closePath();
+
+        return null;
     });
 };
 
 const drawDotOnRadius = (node: Node) => {
     node.connectedNodes.map((connectedNode) => {
-        if (!context || !connectedNode) return;
+        if (!context || !connectedNode) return null;
         const node_pointOnRadius = getPointOnRadius(
             node.position,
             connectedNode.position
@@ -93,6 +89,8 @@ const drawDotOnRadius = (node: Node) => {
 
         drawPoint(connectedNode_pointOnRadius, LABLE_NODES);
         drawPoint(node_pointOnRadius, LABLE_NODES);
+
+        return null;
     });
 };
 
@@ -120,10 +118,6 @@ const drawPointLabel = (point: Coordinates) => {
 
 const drawNode = (node: Node) => {
     if (!context) return;
-
-    console.log("drawing")
-    console.log(node.label)
-    console.log(node.isActive)
 
     context.strokeStyle = node.isActive
         ? "red"

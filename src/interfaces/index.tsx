@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react";
+
 export interface Node {
     position: Coordinates;
     isStartNode: boolean;
@@ -10,4 +12,9 @@ export interface Node {
 export interface Coordinates {
     x: number;
     y: number;
+}
+
+export interface NodesState {
+    nodes: Array<Node> 
+    setNodes: Dispatch<SetStateAction<Array<Node>>> | null | undefined
 }

@@ -1,6 +1,7 @@
-import React from "react";
-import { Node } from "../interfaces";
+import { createContext } from "react";
+import { NodesState } from "../interfaces";
 
-const NodesContext = React.createContext<Array<Node>>([]);
-
-export default NodesContext;
+export const NodesContext = createContext<NodesState>({
+    nodes: [],
+    setNodes: undefined,
+});

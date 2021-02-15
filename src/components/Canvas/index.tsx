@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import NodesContext from "../../contexts/NodesContext";
-import { Node, Coordinates } from "../../interfaces";
+import { NodesContext } from "../../contexts/NodesContext";
+import { Coordinates, Node, NodesState } from "../../interfaces";
 import { draw } from "./draw";
 
 const NODE_RADIUS = 100;
@@ -8,20 +8,17 @@ const NODE_RADIUS = 100;
 const NodeCanvas = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    const contextRef = useRef<CanvasRenderingContext2D | null | undefined>(
-        null
-    );
-
-    const [nodes, setNodes] = useState<Array<Node>>([]);
+    // const [nodes, setNodes] = useState<Array<Node>>([]);
     const [isMovingNode, setIsMovingNode] = useState(false);
     const [activeNodes, setActiveNodes] = useState<Array<Node | null>>([]);
 
-    const nodesContext = useContext(NodesContext);
+    const { nodes, setNodes } = useContext<NodesState>(NodesContext);
 
     useEffect(() => {
         draw.setCanvas(canvasRef);
         draw.nodes(nodes);
-    }, []);
+        // eslint-disable-next-line
+    }, [nodes]);
 
     const handleMouseDown = ({
         nativeEvent,
@@ -44,7 +41,7 @@ const NodeCanvas = () => {
         setActiveNodes(getActiveNodes(nativeEvent.shiftKey, node));
 
         setIsMovingNode(true);
-        draw.nodes(nodes)
+        draw.nodes(nodes);
     };
 
     const getActiveNodes = (
@@ -73,11 +70,10 @@ const NodeCanvas = () => {
             label: `Node ${nodes.length + 1}`,
             connectedNodes: [...activeNodes],
         };
-        setNodes([...nodes, newNode]);
+        // TODO - solve undefined error
+        setNodes!([...nodes, newNode]);
         return newNode;
     };
-
-    const removeNode = () => {};
 
     const getExsistingNode = (point: Coordinates): Node | undefined => {
         const existingNode = nodes.find(
@@ -98,9 +94,11 @@ const NodeCanvas = () => {
         const { offsetX, offsetY } = nativeEvent;
         if (!activeNodes) return;
         activeNodes.map((node) => {
-            if (!node) return;
+            if (!node) return null;
             node.position.x = offsetX * 2;
             node.position.y = offsetY * 2;
+
+            return null;
         });
 
         // position = { x: offsetX * 2, y: offsetY * 2 };
@@ -117,6 +115,7 @@ const NodeCanvas = () => {
         console.log(activeNodes.map((node) => node?.label));
     };
 
+   
     return (
         <canvas
             onMouseDown={handleMouseDown}
